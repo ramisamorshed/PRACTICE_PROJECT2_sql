@@ -10,7 +10,7 @@ USE HRDemo;
 GO
 
 /* =========================================
-   STEP 1: CREATE STAGING TABLES
+  CREATE STAGING TABLES
 ========================================= */
 IF OBJECT_ID('dbo.jobs_stage','U') IS NOT NULL DROP TABLE dbo.jobs_stage;
 IF OBJECT_ID('dbo.applicants_stage','U') IS NOT NULL DROP TABLE dbo.applicants_stage;
@@ -39,7 +39,7 @@ CREATE TABLE dbo.applicants_stage (
 );
 
 /* =========================================
-   STEP 2: IMPORT CSVs INTO STAGING
+  IMPORT CSVs INTO STAGING
    (my exact file paths)
 ========================================= */
 BULK INSERT dbo.jobs_stage
@@ -65,7 +65,7 @@ WITH (
 );
 
 /* =========================================
-   STEP 3: CREATE TYPED RAW TABLES
+CREATE TYPED RAW TABLES
 ========================================= */
 IF OBJECT_ID('dbo.jobs_raw','U') IS NOT NULL DROP TABLE dbo.jobs_raw;
 IF OBJECT_ID('dbo.applicants_raw','U') IS NOT NULL DROP TABLE dbo.applicants_raw;
@@ -94,7 +94,7 @@ CREATE TABLE dbo.applicants_raw (
 );
 
 /* =========================================
-   STEP 4: LOAD FROM STAGING
+LOAD FROM STAGING
 ========================================= */
 INSERT INTO dbo.jobs_raw (
   job_id, job_title, dept, location, recruiter, posted_date, target_fill_days
@@ -126,8 +126,7 @@ SELECT
   LTRIM(RTRIM(status))
 FROM dbo.applicants_stage;
 
-/* =========================================
-   STEP 5: 
+/* ========================================= 
    - normalize emails/phones/sources
    - fill missing stage_date for Applied
    - dedupe by (job_id, email_clean) 
@@ -189,7 +188,7 @@ FROM ranked
 WHERE rn = 1;
 
 /* =========================================
-   STEP 6: BUILD FACT TABLE 
+BUILD FACT TABLE 
 ========================================= */
 IF OBJECT_ID('dbo.fact_applications','U') IS NOT NULL DROP TABLE dbo.fact_applications;
 
@@ -216,7 +215,7 @@ LEFT JOIN dbo.applicants_clean a
   ON j.job_id = a.job_id;
 
 /* =========================================
-   STEP 7: QUICK VALIDATION
+QUICK VALIDATION
 ========================================= */
 SELECT COUNT(*) AS jobs_rows        FROM dbo.jobs_raw;
 SELECT COUNT(*) AS applicants_rows  FROM dbo.applicants_raw;
@@ -233,3 +232,4 @@ GROUP BY source_clean
 ORDER BY cnt DESC;
 
 SELECT TOP (5) * FROM dbo.fact_applications ORDER BY job_id, applicant_name;
+
